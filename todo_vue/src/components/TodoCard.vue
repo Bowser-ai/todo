@@ -1,5 +1,5 @@
 <template>
-  <div class="todo-card">
+  <div class="todo-card" :id="id">
     <p class="header">activiteit:</p>
     <p>{{ name }}</p>
     <p class="header">omschrijving:</p>
@@ -10,7 +10,7 @@
     <input id="time-left" min="0" type="number" :value="retrieve_hours_left">
     <button class="time-left-btn">Instellen tijd</button>
     <label class="header" for="completed">Voltooid? </label>
-    <input id="completed" type="checkbox" style="margin: 0 auto" :checked="completed">
+    <input id="completed" type="checkbox" style="margin: 0 auto" :checked="completed" @change="changeCompleted">
   </div>
 </template>
 
@@ -30,6 +30,19 @@ export default {
     },
     retrieve_hours_left() {
       return /\d+(\d+)/.exec(this.time_left)[1];
+    }
+  },
+  methods : {
+    changeCompleted(e) {
+      const axios = require('axios');
+      const config = {
+        method: 'PUT',
+        url: 'http://127.0.0.1:8000/todos/',
+        headers : {'Content-Type': 'application/json',
+                   'X-CSRFToken': "",},
+        data: JSON.stringify({'id':e.target.parentNode.id, 'completed': e.target.checked})
+      }
+      axios(config);
     }
   }
 }

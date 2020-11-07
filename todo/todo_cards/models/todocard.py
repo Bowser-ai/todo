@@ -12,3 +12,9 @@ class TodoCard(models.Model):
 
     def __str__(self):
         return self.name
+
+    def modify_from_dict(self, data: dict):
+        self.name = data.get('name', self.name)
+        self.description = data.get('description', self.description)
+        self.completed = data.get('completed', self.completed)
+        self.save()
