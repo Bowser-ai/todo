@@ -7,10 +7,11 @@
     <p class="header">aangemaakt op:</p>
     <p>{{ retrieve_date_created }}</p>
     <label class="header" for="time-left">nog te besteden uren:</label>
-    <input id="time-left" min="0" type="number" :value="retrieve_hours_left">
+    <input id="time-left" :value="retrieve_hours_left">
     <button class="time-left-btn">Instellen tijd</button>
     <label class="header" for="completed">Voltooid? </label>
     <input id="completed" type="checkbox" style="margin: 0 auto" :checked="completed" @change="changeCompleted">
+    <button class="remove-card" @click="removeTodoCard">Verwijderen</button>
   </div>
 </template>
 
@@ -29,7 +30,7 @@ export default {
       return /\d+-\d+-\d+/.exec(this.date_created)[0];
     },
     retrieve_hours_left() {
-      return /\d+(\d+)/.exec(this.time_left)[1];
+      return /\d{2}:\d{2}/.exec(this.time_left)[0];
     }
   },
   methods : {
@@ -43,6 +44,18 @@ export default {
         data: JSON.stringify({'id':e.target.parentNode.id, 'completed': e.target.checked})
       }
       axios(config);
+    },
+    async removeTodoCard() {
+      const axios = require('axios');
+      const data = {'id': this.id}
+      const config = {
+        url: 'http://127.0.0.1:8000/todos/',
+        method: 'delete',
+        'Content-Type': 'application/json',
+        data
+      }
+      await axios(config);
+      this.$emit('removedCard', this.id);
     }
   }
 }
@@ -70,9 +83,11 @@ export default {
   width: fit-content;
   text-align: center;
 }
-
 .time-left-btn {
     width: fit-content;
     margin: 20px auto;
+}
+.remove-card {
+  margin-top: 20px;
 }
 </style>

@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List
 import json
 
@@ -15,14 +14,7 @@ class TodoCards(View):
     def get(self, request) -> JsonResponse:
         todo_cards: List[TodoCard] = TodoCard.objects.all()
         response_dict: dict = {
-            'todo_cards': [{
-                    'id': todo_card.pk,
-                    'name': todo_card.name,
-                    'description': todo_card.description,
-                    'date_created': todo_card.date_created.strftime('%Y-%m-%d %HH:%MM:%SS'),
-                    'time_left': todo_card.time_left.strftime('%HH:%MM'),
-                    'completed': todo_card.completed
-                 } for todo_card in todo_cards]
+            'todo_cards': [todo_card.to_frontend_dict() for todo_card in todo_cards]
         }
         return JsonResponse(response_dict)
 
@@ -31,3 +23,15 @@ class TodoCards(View):
         todo_card: TodoCard = TodoCard.objects.get(id=body['id'])
         todo_card.modify_from_dict(body)
         return JsonResponse({}, status=204)
+
+    def post(self, request) -> JsonResponse:
+        body = json.loads(request.body)
+        todo_card: TodoCard = TodoCard.objects.create(name=body['name'], description=body['description'],
+                                                      time_left=body['time_left'])
+        return JsonResponse(todo_card.to_frontend_dict(), status=201)
+
+    def delete(self, request) -> JsonResponse:
+        body = json.loads(request.body)
+        todo_id: int = body['id'];
+        TodoCard.objects.filter(id=todo_id).delete()
+        return JsonResponse({}, status=201)
