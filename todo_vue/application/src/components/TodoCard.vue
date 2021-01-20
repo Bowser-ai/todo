@@ -71,7 +71,7 @@ export default {
 .todo-card {
   border: 1px black solid;
   border-radius: 10px;
-  background-color: #0c51ce;
+  background-color: red;
   width: fit-content;
   height: fit-content;
   padding: 40px;
