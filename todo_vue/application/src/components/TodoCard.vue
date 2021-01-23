@@ -1,5 +1,5 @@
 <template>
-  <tr :class="calcColor(id)" :id="id">
+  <tr class="todo-card" :id="id">
     <td>{{ name }}</td>
     <td>{{ description }}</td>
     <td>{{ retrieveDateCreated }}</td>
@@ -65,22 +65,11 @@ export default {
       await axios(config);
       this.$emit('removedCard', this.id);
     },
-    calcColor(id) {
-      let classAttr = 'todo-card';
-      if (id % 2 == 0) {
-        classAttr += ' even';
-      }
-      else {
-        classAttr += ' odd';
-      }
-      return classAttr;
-    },
     changeCard() {
       this.$emit('changedCard', this.id);
     },
     crossOutCard() {
       const todoCardElement = document.querySelector('[id="' + this.id + '"]');
-      todoCardElement.setAttribute('style', 'text-decoration');
       todoCardElement.style.textDecoration = 'line-through';
     }
   },
@@ -113,12 +102,6 @@ export default {
 }
 .remove-card {
   margin-top: 20px;
-}
-.odd {
-  background-color: #0e62e3;
-}
-.even {
-  background-color: #548b2c;
 }
 .complete {
   color: red;

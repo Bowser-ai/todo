@@ -9,7 +9,7 @@
         <th>Uren te besteden</th>
         <th>Status</th>
       </tr>
-      <todo-card v-for="todoCard in todoCards" v-bind="todoCard" @removedCard="removeCard" @changedCard="changeCard" v-bind:key="todoCard.id"></todo-card>
+      <todo-card v-for="(todoCard, index) in todoCards" :style="setRowColor(index)" v-bind="todoCard" @removedCard="removeCard" @changedCard="changeCard" v-bind:key="todoCard.id"></todo-card>
     </table>
     <button @click="addTodoCard" class="add-todo-card-btn">Maak Todo aan</button>
   </div>
@@ -136,6 +136,10 @@ export default {
         }
         return e;
       });
+    },
+    setRowColor(index) {
+      if (index % 2 == 0) return 'background: #0e62e3';
+      return 'background: #548b2c';
     }
   }
 }
