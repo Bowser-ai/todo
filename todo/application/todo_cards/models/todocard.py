@@ -17,6 +17,8 @@ class TodoCard(models.Model):
         self.name = data.get('name', self.name)
         self.description = data.get('description', self.description)
         self.completed = data.get('completed', self.completed)
+        self.time_left = data.get('time_left', self.time_left)
+        self.date_created = data.get('date_created', self.date_created)
         self.save()
 
     def to_frontend_dict(self):

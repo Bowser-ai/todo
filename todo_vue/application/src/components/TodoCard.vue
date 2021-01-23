@@ -1,18 +1,14 @@
 <template>
-  <div class="todo-card" :id="id">
-    <p class="header">activiteit:</p>
-    <p>{{ name }}</p>
-    <p class="header">omschrijving:</p>
-    <p>{{ description }}</p>
-    <p class="header">aangemaakt op:</p>
-    <p>{{ retrieve_date_created }}</p>
-    <label class="header" for="time-left">nog te besteden uren:</label>
-    <input id="time-left" :value="retrieve_hours_left">
-    <button class="time-left-btn">Instellen tijd</button>
-    <label class="header" for="completed">Voltooid? </label>
-    <input id="completed" type="checkbox" style="margin: 0 auto" :checked="completed" @change="changeCompleted">
-    <button class="remove-card" @click="removeTodoCard">Verwijderen</button>
-  </div>
+  <tr :class="calcColor(id)" :id="id">
+    <td>{{ name }}</td>
+    <td>{{ description }}</td>
+    <td>{{ retrieveDateCreated }}</td>
+    <td>{{ retrieveHoursLeft}}</td>
+    <td> {{ mapCompletedToStatus }}</td>
+    <div role="button" class="complete" @click="completedCard">Afronden</div>
+    <i role="button" @click="changeCard" class="fas fa-pencil-alt"></i>
+    <i role="button" @click="removeTodoCard" class="fas fa-trash" style="margin-left: 10px"></i>
+  </tr>
 </template>
 
 <script>
@@ -25,25 +21,37 @@ export default {
     time_left: String,
     completed: Boolean
   },
+  data() {
+    return {
+      todoCompleted: this.completed
+    };
+  },
   computed: {
-    retrieve_date_created() {
+    retrieveDateCreated() {
       return /\d+-\d+-\d+/.exec(this.date_created)[0];
     },
-    retrieve_hours_left() {
+    retrieveHoursLeft() {
       return /\d{2}:\d{2}/.exec(this.time_left)[0];
+    },
+    mapCompletedToStatus() {
+      return this.todoCompleted ? 'Voltooid': 'Todo';
     }
   },
   methods : {
-    changeCompleted(e) {
+    async completedCard(e) {
       const axios = require('axios');
       const config = {
         method: 'PUT',
         url: 'http://127.0.0.1:8000/todos/',
         headers : {'Content-Type': 'application/json',
                    'X-CSRFToken': "",},
-        data: JSON.stringify({'id':e.target.parentNode.id, 'completed': e.target.checked})
+        data: JSON.stringify({'id':e.target.parentNode.id, 'completed': true})
       }
-      axios(config);
+      const response = await axios(config);
+      if (response.status === 201){
+        this.todoCompleted = true;
+        this.crossOutCard();
+      }
     },
     async removeTodoCard() {
       const axios = require('axios');
@@ -56,7 +64,28 @@ export default {
       }
       await axios(config);
       this.$emit('removedCard', this.id);
+    },
+    calcColor(id) {
+      let classAttr = 'todo-card';
+      if (id % 2 == 0) {
+        classAttr += ' even';
+      }
+      else {
+        classAttr += ' odd';
+      }
+      return classAttr;
+    },
+    changeCard() {
+      this.$emit('changedCard', this.id);
+    },
+    crossOutCard() {
+      const todoCardElement = document.querySelector('[id="' + this.id + '"]');
+      todoCardElement.setAttribute('style', 'text-decoration');
+      todoCardElement.style.textDecoration = 'line-through';
     }
+  },
+  mounted() {
+    if (this.completed) this.crossOutCard();
   }
 }
 </script>
@@ -71,13 +100,8 @@ export default {
 .todo-card {
   border: 1px black solid;
   border-radius: 10px;
-  background-color: red;
-  width: fit-content;
-  height: fit-content;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
 }
+
 #time-left {
   margin:auto;
   width: fit-content;
@@ -89,5 +113,15 @@ export default {
 }
 .remove-card {
   margin-top: 20px;
+}
+.odd {
+  background-color: #0e62e3;
+}
+.even {
+  background-color: #548b2c;
+}
+.complete {
+  color: red;
+  text-decoration: underline;
 }
 </style>

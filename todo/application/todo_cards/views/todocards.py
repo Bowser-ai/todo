@@ -12,7 +12,7 @@ from todo_cards.models import TodoCard
 @method_decorator(csrf_exempt, name='dispatch')
 class TodoCards(View):
     def get(self, request) -> JsonResponse:
-        todo_cards: List[TodoCard] = TodoCard.objects.all()
+        todo_cards: List[TodoCard] = TodoCard.objects.all().order_by('-date_created')
         response_dict: dict = {
             'todo_cards': [todo_card.to_frontend_dict() for todo_card in todo_cards]
         }
@@ -22,7 +22,7 @@ class TodoCards(View):
         body = json.loads(request.body)
         todo_card: TodoCard = TodoCard.objects.get(id=body['id'])
         todo_card.modify_from_dict(body)
-        return JsonResponse({}, status=204)
+        return JsonResponse(todo_card.to_frontend_dict(), status=201)
 
     def post(self, request) -> JsonResponse:
         body = json.loads(request.body)
