@@ -51,6 +51,7 @@ export default {
       if (response.status === 201){
         this.todoCompleted = true;
         this.crossOutCard();
+        this.$emit('completedCard');
       }
     },
     async removeTodoCard() {
@@ -71,7 +72,7 @@ export default {
     crossOutCard() {
       const todoCardElement = document.querySelector('[id="' + this.id + '"]');
       todoCardElement.style.textDecoration = 'line-through';
-    }
+    },
   },
   mounted() {
     if (this.completed) this.crossOutCard();

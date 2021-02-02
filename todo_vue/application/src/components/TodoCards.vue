@@ -9,7 +9,7 @@
         <th>Uren te besteden</th>
         <th>Status</th>
       </tr>
-      <todo-card v-for="(todoCard, index) in todoCards" :style="setRowColor(index)" v-bind="todoCard" @removedCard="removeCard" @changedCard="changeCard" v-bind:key="todoCard.id"></todo-card>
+      <todo-card v-for="(todoCard, index) in todoCards" :style="setRowColor(index)" v-bind="todoCard" @removedCard="removeCard" @changedCard="changeCard" @completedCard="completedCard" v-bind:key="todoCard.id"></todo-card>
     </table>
     <button @click="addTodoCard" class="add-todo-card-btn">Maak Todo aan</button>
   </div>
@@ -48,100 +48,106 @@
 <script>
 import TodoCard from './TodoCard';
 export default {
-  components: {
-    'todo-card': TodoCard
-  },
-  data() {
-    return {
-      todoCards: [],
-    };
-  },
-  computed: {
-    total_hours() {
-      return this.todoCards.reduce((acc, e) => {
-        return acc + Number(/\d+(\d+)/.exec(e['time_left'])[1])
-      }, 0);
-    }
-  },
-  mounted() {
-    this.retrieveAllCards()
-    this.$ = window.jQuery;
-  },
-  methods: {
-    async retrieveAllCards() {
-      const axios = require('axios');
-      const {
-        data
-      } = await axios.get('http://127.0.0.1:8000/todos/');
-      this.todoCards = data['todo_cards'];
+    components: {
+        'todo-card': TodoCard
     },
-    addTodoCard() {
-      this.$('.modal').show();
+    data() {
+        return {
+          todoCards: [],
+        };
     },
-    closeAddDialog() {
-      this.$('#hidden-id-field').remove();
-      this.$('.todo-info').get(0).reset();
-      this.$('.modal').hide();
+    computed: {
+        total_hours() {
+            return this.todoCards.reduce((acc, e) => {
+                return acc + Number(/\d+(\d+)/.exec(e['time_left'])[1])
+            }, 0);
+        }
     },
-    async saveAddTodo() {
-      const formTodoInfo = this.$('.todo-info')
-      const formData = formTodoInfo.serializeArray();
-      const data_to_send = {};
-      for (let fd of formData) {
-        data_to_send[fd.name] = fd.value;
-      }
-      const axios = require('axios');
-      const config = {
-        method: data_to_send.id ? 'PUT' : 'POST',
-        url: 'http://127.0.0.1:8000/todos/',
-        headers: {
-          'Content-Type': 'application/json'
+    mounted() {
+        this.retrieveAllCards()
+        this.$ = window.jQuery;
+    },
+    methods: {
+        async retrieveAllCards() {
+            const axios = require('axios');
+            const {
+                data
+            } = await axios.get('http://127.0.0.1:8000/todos/');
+            this.todoCards = data['todo_cards'];
+            },
+        addTodoCard() {
+            this.$('.modal').show();
+        } ,
+        closeAddDialog() {
+            this.$('#hidden-id-field').remove();
+            this.$('.todo-info').get(0).reset();
+            this.$('.modal').hide();
+            },
+        async saveAddTodo() {
+            const formTodoInfo = this.$('.todo-info')
+            const formData = formTodoInfo.serializeArray();
+            const data_to_send = {};
+            for (let fd of formData) {
+                data_to_send[fd.name] = fd.value;
+            }
+            const axios = require('axios');
+            const config = {
+                method: data_to_send.id ? 'PUT' : 'POST',
+                url: 'http://127.0.0.1:8000/todos/',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: JSON.stringify(data_to_send)
+            }
+            const {
+                data
+            } = await axios(config);
+            if (!data_to_send.id) this.addCardToUI(data);
+            else this.updateCard(data);
+            this.closeAddDialog();
         },
-        data: JSON.stringify(data_to_send)
-      }
-      const {
-        data
-      } = await axios(config);
-      if (!data_to_send.id) this.addCardToUI(data);
-      else this.updateCard(data);
-      this.closeAddDialog();
-    },
-    addCardToUI(data) {
-      this.todoCards = [...this.todoCards, data];
-    },
-    removeCard(id) {
-      this.todoCards = this.todoCards.filter(e => e.id !== id);
-    },
-    changeCard(id) {
-      const todoCard = this.todoCards.find(e => e.id === id);
-      const $todoForm = this.$('.todo-info');
-      this.$('.modal').show();
-      const $idField = this.$('<input>', {
-        id: 'hidden-id-field',
-        name: 'id',
-        value: todoCard.id,
-        hidden: true
-      });
-      $todoForm.append($idField);
-      $todoForm.children().each((_, element) => {
-        if (element.name !== undefined) {
-          element.value = todoCard[element.name];
+        addCardToUI(data) {
+            this.todoCards = [data, ...this.todoCards];
+        },
+        removeCard(id) {
+            this.todoCards = this.todoCards.filter(e => e.id !== id);
+        },
+        changeCard(id) {
+            const todoCard = this.todoCards.find(e => e.id === id);
+            const $todoForm = this.$('.todo-info');
+            this.$('.modal').show();
+            const $idField = this.$('<input>', {
+                id: 'hidden-id-field',
+                name: 'id',
+                value: todoCard.id,
+                hidden: true
+            });
+            $todoForm.append($idField);
+            $todoForm.children().each((_, element) => {
+                if (element.name !== undefined) {
+                    element.value = todoCard[element.name];
+                }
+            });
+        },
+        updateCard(data) {
+            this.todoCards = this.todoCards.map(e => {
+                if (e.id === data.id) {
+                    return data;
+                }
+                return e;
+            });
+        },
+        completedCard() {
+            this.todoCards.sort(e => {
+                if (e.completed) return 1;
+                else return -1;
+            });
+        },
+        setRowColor(index) {
+            if (index % 2 == 0) return 'background: #0e62e3';
+            return 'background: #548b2c';
         }
-      });
     },
-    updateCard(data) {
-      this.todoCards = this.todoCards.map(e => {
-        if (e.id === data.id) {
-          return data;
-        }
-        return e;
-      });
-    },
-    setRowColor(index) {
-      if (index % 2 == 0) return 'background: #0e62e3';
-      return 'background: #548b2c';
-    }
-  }
 }
 </script>
 <style scoped>
